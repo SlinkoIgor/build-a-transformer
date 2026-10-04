@@ -1,20 +1,27 @@
 (function (root) {
   'use strict';
   const BLOCKS = [
+    { id: 'multiply', name: 'Multiply', symbol: '×', group: 'ffn', desc: 'Multiply two branches element by element. This is the gate in SwiGLU and gated attention.' },
+    { id: 'causal-conv', name: 'Causal Depthwise Conv', symbol: 'Conv', group: 'attention', desc: 'A width-4 depthwise convolution of Q/K/V. Only current and earlier tokens contribute.' },
+    { id: 'l2norm', name: 'L2 Normalize Q/K', symbol: 'L2', group: 'norm', desc: 'Normalize Q and K by their vector lengths, separately for each head.' },
+    { id: 'repeat-kv', name: 'Repeat Head Groups', symbol: '↟', group: 'attention', desc: 'Share K/V across query groups in GQA, or repeat DeltaNet Q/K to match its value heads.' },
+    { id: 'softplus', name: 'Softplus', symbol: 'ln+', group: 'ffn', desc: 'log(1 + exp(x)). Produces the positive time step used by DeltaNet decay.' },
+    { id: 'decay', name: 'Exponential Decay', symbol: 'eᵍ', group: 'attention', desc: 'alpha = exp(-exp(A_log) × softplus(a + dt_bias)). Decays the recurrent state.' },
+    { id: 'delta-rule', name: 'Gated Delta Update', symbol: 'ΔS', group: 'attention', desc: 'Decay state S, then write beta × k × (v − kᵀS)ᵀ. Read the updated state with Q.' },
     { id: 'embedding', name: 'Token Embedding', symbol: 'E', group: 'input', desc: 'Map a token ID to a vector with d_model features.' },
     { id: 'learned-position', name: 'Learned Position', symbol: 'P', group: 'input', desc: 'Learned position embeddings, used in the original BERT and GPT-2.' },
     { id: 'sinusoidal', name: 'Sinusoidal Position', symbol: '∿', group: 'input', desc: 'Fixed sine and cosine position vectors from the 2017 Transformer.' },
     { id: 'segment', name: 'Token Type Embedding', symbol: 'A/B', group: 'input', desc: 'Segment A/B embeddings from the original BERT.' },
     { id: 'rope', name: 'RoPE', symbol: '↻', group: 'input', desc: 'Rotate Q/K inside attention. RoPE is not a vector added to token embeddings.' },
     { id: 'linear', name: 'Linear', symbol: 'Wx', group: 'attention', desc: 'A learned linear projection for Q/K/V, attention output, or the FFN.' },
-    { id: 'split', name: 'Split Heads', symbol: '⑂', group: 'attention', desc: 'Reshape Q/K/V into h heads: d_head = d_model / h.' },
+    { id: 'split', name: 'Split Heads', symbol: '⑂', group: 'attention', desc: 'Reshape Q/K/V projections into heads. Head width may be specified independently of d_model.' },
     { id: 'qk', name: 'Q × Kᵀ', symbol: 'QKᵀ', group: 'attention', desc: 'Compare queries with keys. Scores have shape T_query × T_key.' },
     { id: 'scale', name: 'Scale 1/√dₖ', symbol: '÷√d', group: 'attention', desc: 'Scale attention scores by the size of one head, before softmax.' },
     { id: 'causal', name: 'Causal Mask', symbol: '◩', group: 'attention', desc: 'Set future-token scores to negative infinity before softmax.' },
     { id: 'bidirectional', name: 'Full Attention', symbol: '▦', group: 'attention', desc: 'Allow all valid context positions. Padding is still masked out.' },
     { id: 'softmax', name: 'Softmax', symbol: 'σ', group: 'attention', desc: 'Turn scores into attention weights. Weights sum to 1 over keys.' },
     { id: 'av', name: 'Attention × V', symbol: 'AV', group: 'attention', desc: 'Compute a weighted sum of values in each head.' },
-    { id: 'concat', name: 'Concat Heads', symbol: '⊕', group: 'attention', desc: 'Concatenate h heads back into d_model features.' },
+    { id: 'concat', name: 'Concat Heads', symbol: '⊕', group: 'attention', desc: 'Concatenate the heads into the attention output width, then project to d_model.' },
     { id: 'add', name: 'Add', symbol: '+', group: 'norm', desc: 'Sum embeddings or add the residual: x + F(x). Tensor shapes must match.' },
     { id: 'layernorm', name: 'LayerNorm', symbol: 'LN', group: 'norm', desc: 'Normalize each token across features, with mean subtraction and learned scale/bias.' },
     { id: 'rmsnorm', name: 'RMSNorm', symbol: 'RMS', group: 'norm', desc: 'Normalize by RMS without mean subtraction. Used in models such as Llama.' },
@@ -28,7 +35,9 @@
   ];
   const BY_ID = Object.fromEntries(BLOCKS.map(b => [b.id, b]));
   const COARSE_BLOCKS = [
-    { id: 'input-embeddings', name: 'Input Embeddings', symbol: 'E+P', group: 'input', desc: 'Turn token IDs and positions into the input to the stack. Build the embedding operations inside later.' },
+    { id: 'gated-delta-net', name: 'Gated DeltaNet', symbol: 'Δ', group: 'attention', desc: 'A causal recurrent token mixer with a decaying matrix memory and a delta-rule update.' },
+    { id: 'gated-self-attention', name: 'Gated Self-Attention', symbol: 'GQA', group: 'attention', desc: 'Causal grouped-query attention with Q/K normalization, partial RoPE, and an output gate.' },
+    { id: 'input-embeddings', name: 'Input Embeddings', symbol: 'E', group: 'input', desc: 'Turn token IDs and, when used, position embeddings into the stack input. Build the embedding operations inside later.' },
     { id: 'self-attention', name: 'Self-Attention', symbol: 'MHA', group: 'attention', desc: 'Multi-head self-attention with access to the full valid context.' },
     { id: 'masked-self-attention', name: 'Masked Self-Attention', symbol: '◩', group: 'attention', desc: 'Multi-head self-attention that hides future tokens.' },
     { id: 'cross-attention', name: 'Cross-Attention', symbol: 'Q/KV', group: 'attention', desc: 'Queries come from the decoder; keys and values come from encoder memory.' },
@@ -47,6 +56,7 @@
     bert: { name: 'BERT', year: 2018, eyebrow: '01 / ENCODER', subtitle: 'Build a bidirectional encoder.', desc: 'Build the original BERT encoder. Every token can attend to the full valid context.', label: 'BERT-base', d: 768, heads: 12, depth: 12, hidden: 3072, norm: 'post', activation: 'gelu', position: 'learned-position', tokens: ['[CLS]', 'cat', 'sits', 'on', 'mat', '[SEP]'] },
     gpt: { name: 'GPT-2', year: 2019, eyebrow: '02 / DECODER', subtitle: 'Build a decoder that predicts the next token.', desc: 'Build the original GPT-2 decoder: causal attention, Pre-LN, and a final LayerNorm.', label: 'GPT-2 small', d: 768, heads: 12, depth: 12, hidden: 3072, norm: 'pre', activation: 'gelu', position: 'learned-position', tokens: ['cat', 'sits', 'on', 'mat', 'and', '…'] },
     encdec: { name: 'Attention Is All You Need', year: 2017, eyebrow: '03 / SEQUENCE TO SEQUENCE', subtitle: 'Build the original encoder and decoder.', desc: 'Build the Transformer from Attention Is All You Need. The decoder attends to the encoder output.', label: 'Attention Is All You Need', d: 512, heads: 8, depth: 6, hidden: 2048, norm: 'post', activation: 'relu', position: 'sinusoidal', tokens: ['<BOS>', 'the', 'cat', 'is', 'sitting', '…'] },
+    qwen: { name: 'Qwen3.8-27B', year: 2026, eyebrow: '04 / HYBRID DECODER', subtitle: 'Build a modern hybrid decoder.', desc: 'Build the text backbone: three Gated DeltaNet layers, then one gated-attention layer, repeated 16 times.', label: 'Qwen3.8-27B · text backbone', d: 5120, heads: 24, kvHeads: 4, headDim: 256, depth: 64, hidden: 17408, norm: 'pre', normType: 'rmsnorm', activation: 'silu', gatedFFN: true, position: null, tokens: ['the', 'cat', 'sits', 'on', 'mat', '…'] },
   };
   const ATTENTION_STEPS = [
     { key: 'q', label: 'Project queries (Q)', expected: 'linear' },
@@ -61,6 +71,33 @@
     { key: 'concat', label: 'Merge the heads', expected: 'concat' },
     { key: 'out', label: 'Project attention output', expected: 'linear' },
   ];
+  const step = (key, label, expected) => ({ key, label, expected });
+  const DELTA_STEPS = [
+    step('qkv', 'Project Q, K, V', 'linear'), step('conv', 'Mix nearby tokens', 'causal-conv'),
+    step('convAct', 'Activate convolved Q/K/V', 'silu'), step('split', 'Split into heads', 'split'),
+    step('qkNorm', 'Normalize Q/K vectors', 'l2norm'), step('repeat', 'Match Q/K and V heads', 'repeat-kv'),
+    step('scale', 'Scale queries', 'scale'), step('betaProj', 'Project update strength', 'linear'),
+    step('beta', 'Bound update strength', 'sigmoid'), step('decayProj', 'Project decay time step', 'linear'),
+    step('timeStep', 'Make time step positive', 'softplus'), step('decay', 'Decay the recurrent state', 'decay'),
+    step('rule', 'Update and read memory', 'delta-rule'), step('outNorm', 'Normalize each output head', 'rmsnorm'),
+    step('gateProj', 'Project output gate', 'linear'), step('gateAct', 'Activate output gate', 'silu'),
+    step('gate', 'Apply output gate', 'multiply'), step('concat', 'Merge value heads', 'concat'),
+    step('out', 'Project back to model width', 'linear'),
+  ];
+  const SWIGLU_STEPS = [step('gateProj', 'Project gate branch', 'linear'), step('upProj', 'Project value branch', 'linear'), step('activation', 'Activate gate branch', 'silu'), step('multiply', 'Multiply gate and value branches', 'multiply'), step('downProj', 'Project back to model width', 'linear')];
+  function headDim(game) { return PROFILES[game.level].headDim || game.d / game.heads; }
+  function moduleSteps(game, meta) {
+    if (meta.kind === 'delta') return DELTA_STEPS;
+    if (meta.kind === 'ffn') return PROFILES[game.level].gatedFFN ? SWIGLU_STEPS : null;
+    if (game.level !== 'qwen') return ATTENTION_STEPS.map(s => ({ ...s, expected: s.key === 'mask' ? meta.mask : s.expected }));
+    return [
+      ...ATTENTION_STEPS.slice(0, 4), step('qNorm', 'Normalize query heads', 'rmsnorm'), step('kNorm', 'Normalize key heads', 'rmsnorm'),
+      step('rope', 'Rotate Q/K positions', 'rope'), step('repeat', 'Share K/V across query groups', 'repeat-kv'),
+      ...ATTENTION_STEPS.slice(4, 10).map(s => ({ ...s, expected: s.key === 'mask' ? 'causal' : s.expected })),
+      step('gateProj', 'Project output gate', 'linear'), step('gateAct', 'Activate output gate', 'silu'),
+      step('gate', 'Apply output gate', 'multiply'), ATTENTION_STEPS[10],
+    ];
+  }
   const clone = value => JSON.parse(JSON.stringify(value));
   function createGame(level) {
     const p = PROFILES[level];
@@ -70,6 +107,12 @@
     return game.level === 'encdec' ? ['encoder', 'decoder'] : [game.level === 'bert' ? 'encoder' : 'decoder'];
   }
   function modulesFor(game, lane) {
+    if (game.level === 'qwen') return [
+      { id: 'decoder.delta', kind: 'delta', name: 'Gated DeltaNet', mask: 'causal' },
+      { id: 'decoder.delta.ffn', kind: 'ffn', name: 'Feed Forward · SwiGLU' },
+      { id: 'decoder.self', kind: 'attention', name: 'Gated Self-Attention', mask: 'causal' },
+      { id: 'decoder.ffn', kind: 'ffn', name: 'Feed Forward · SwiGLU' },
+    ];
     return [{ id: lane + '.self', kind: 'attention', name: lane === 'decoder' ? 'Masked Self-Attention' : 'Self-Attention', mask: lane === 'decoder' ? 'causal' : 'bidirectional' }, ...(game.level === 'encdec' && lane === 'decoder' ? [{ id: lane + '.cross', kind: 'attention', name: 'Cross-Attention', mask: 'bidirectional' }] : []), { id: lane + '.ffn', kind: 'ffn', name: 'Feed Forward' }];
   }
   function coarseTopology(game) {
@@ -79,7 +122,7 @@
       push(lane + '.input', 'embedding', 'input-embeddings');
       for (const meta of modulesFor(game, lane)) {
         if (game.norm === 'pre') push(meta.id + '.norm', meta.id, 'normalization');
-        push(meta.id, meta.id, meta.kind === 'ffn' ? 'feed-forward' : meta.id.endsWith('.cross') ? 'cross-attention' : lane === 'decoder' ? 'masked-self-attention' : 'self-attention');
+        push(meta.id, meta.id, meta.kind === 'ffn' ? 'feed-forward' : meta.kind === 'delta' ? 'gated-delta-net' : game.level === 'qwen' ? 'gated-self-attention' : meta.id.endsWith('.cross') ? 'cross-attention' : lane === 'decoder' ? 'masked-self-attention' : 'self-attention');
         push(meta.id + (game.norm === 'pre' ? '.add' : '.residual'), meta.id, game.norm === 'pre' ? 'residual-add' : 'add-norm');
       }
       if (lane === 'decoder' || game.norm === 'pre') push(lane + '.output', 'output', lane === 'decoder' ? 'lm-head' : 'final-norm');
@@ -105,7 +148,7 @@
       if (stage.scope === 'embedding' || stage.scope === 'output') touched ||= topology(game).some(s => s.lane === stage.lane && s.scope === stage.scope && game.slots[s.id]);
       else {
         const m = game.modules[stage.scope];
-        touched ||= m?.kind === 'ffn' ? m.layers.some(l => l.type) : Object.values(m?.slots || {}).some(Boolean);
+        touched ||= m?.kind === 'ffn' && m.layers ? m.layers.some(l => l.type) : Object.values(m?.slots || {}).some(Boolean);
         touched ||= game.slots[stage.scope + '.norm'] || game.slots[stage.scope + '.add'];
       }
       if (touched) game.structure[stage.id] = stage.expected;
@@ -115,8 +158,9 @@
   function checkStructure(game) {
     const structure = ensureStructure(game), p = PROFILES[game.level], checks = [];
     const record = (id, label, ok, message) => checks.push({ id, label, ok, message });
-    record('config.norm', 'Reference normalization order', game.experimental || game.norm === p.norm, `${p.label} uses ${p.norm === 'pre' ? 'Pre-LN with a final LayerNorm' : 'Post-LN'}. Restore that order or enable Experiment mode to try a different architecture.`);
-    record('config.heads', 'Head size', Number.isInteger(game.d / game.heads) && game.heads > 0, `d_model (${game.d}) must be divisible by h (${game.heads}) with no remainder.`);
+    record('config.norm', 'Reference normalization order', game.experimental || game.norm === p.norm, `${p.label} uses ${p.norm === 'pre' ? (p.normType === 'rmsnorm' ? 'Pre-RMSNorm with a final RMSNorm' : 'Pre-LN with a final LayerNorm') : 'Post-LN'}. Restore that order or enable Experiment mode to try a different architecture.`);
+    record('config.heads', 'Head size', game.level === 'qwen' ? Number.isInteger(game.heads) && game.heads > 0 && game.heads % p.kvHeads === 0 : Number.isInteger(game.d / game.heads) && game.heads > 0, game.level === 'qwen' ? `Query heads must be divisible by the ${p.kvHeads} K/V heads. Head width is explicitly ${p.headDim}, independent of d_model.` : `d_model (${game.d}) must be divisible by h (${game.heads}) with no remainder.`);
+    if (game.level === 'qwen' && !game.experimental) for (const key of ['d', 'heads', 'hidden', 'depth']) record('config.' + key, 'Reference ' + key, game[key] === p[key], `Qwen3.8-27B uses ${key} = ${p[key]}. Enable Experiment mode to change dimensions.`);
     for (const stage of coarseTopology(game)) {
       const actual = structure[stage.id], expected = COARSE_BY_ID[stage.expected];
       const message = !actual ? `Place a module in "${stage.label}".` : `${COARSE_BY_ID[actual]?.name || actual} does not fit "${stage.label}". Use ${expected.name}.`;
@@ -135,15 +179,15 @@
     const push = (id, label, expected, lane, scope = 'outside') => result.push({ id, label, expected, lane, scope });
     for (const lane of lanes(game)) {
       push(lane + '.token', 'Token vectors', 'embedding', lane, 'embedding');
-      push(lane + '.position', 'Position vectors', p.position, lane, 'embedding');
+      if (p.position) push(lane + '.position', 'Position vectors', p.position, lane, 'embedding');
       if (game.level === 'bert') push(lane + '.segment', 'Segment A/B vectors', 'segment', lane, 'embedding');
-      push(lane + '.embedAdd', 'Combine the input vectors', 'add', lane, 'embedding');
+      if (p.position) push(lane + '.embedAdd', 'Combine the input vectors', 'add', lane, 'embedding');
       if (game.level === 'bert') push(lane + '.embedNorm', 'Normalize input embeddings', 'layernorm', lane, 'embedding');
       for (const m of modulesFor(game, lane)) {
-        push(m.id + '.norm', game.norm === 'pre' ? 'Normalize before ' + (m.kind === 'ffn' ? 'FFN' : 'attention') : 'Normalize after residual addition', 'layernorm', lane, m.id);
+        push(m.id + '.norm', game.norm === 'pre' ? 'Normalize before ' + (m.kind === 'ffn' ? 'FFN' : 'attention') : 'Normalize after residual addition', p.normType || 'layernorm', lane, m.id);
         push(m.id + '.add', 'Residual: x + F(x)', 'add', lane, m.id);
       }
-      if (game.norm === 'pre') push(lane + '.finalNorm', 'Normalize the final stack output', 'layernorm', lane, 'output');
+      if (game.norm === 'pre') push(lane + '.finalNorm', 'Normalize the final stack output', p.normType || 'layernorm', lane, 'output');
       if (lane === 'decoder') {
         push(lane + '.head', 'Project to the vocabulary', 'linear', lane, 'output');
         push(lane + '.probs', 'Next-token probabilities', 'softmax', lane, 'output');
@@ -153,7 +197,11 @@
   }
   function ensureModule(game, id) {
     if (!game.modules[id]) {
-      game.modules[id] = id.endsWith('.ffn') ? { kind: 'ffn', layers: [{ type: null, width: game.hidden }, { type: null, width: game.hidden }, { type: null, width: game.d }] } : { kind: 'attention', slots: {}, sources: { q: 'hidden', k: 'hidden', v: 'hidden' } };
+      if (PROFILES[game.level].gatedFFN && id.endsWith('.ffn')) {
+        game.modules[id] = { kind: 'ffn', gated: true, slots: {}, widths: { gateProj: game.hidden, upProj: game.hidden, downProj: game.d } };
+        return game.modules[id];
+      }
+      game.modules[id] = id === 'decoder.delta' ? { kind: 'delta', slots: {} } : id.endsWith('.ffn') ? { kind: 'ffn', layers: [{ type: null, width: game.hidden }, { type: null, width: game.hidden }, { type: null, width: game.d }] } : { kind: 'attention', slots: {}, sources: { q: 'hidden', k: 'hidden', v: 'hidden' } };
     }
     return game.modules[id];
   }
@@ -164,27 +212,33 @@
     const record = (id, label, ok, message, module) => { checks.push({ id, label, ok, message, module }); if (!ok) issues.push({ id, label, message, module }); };
     for (const s of topology(game)) {
       const actual = game.slots[s.id];
-      const normAlt = game.experimental && s.expected === 'layernorm' && actual === 'rmsnorm';
+      const normAlt = game.experimental && ((s.expected === 'layernorm' && actual === 'rmsnorm') || (s.expected === 'rmsnorm' && actual === 'layernorm'));
       const ok = actual === s.expected || normAlt;
       let message = !actual ? `Fill the "${s.label}" slot.` : `${BY_ID[actual]?.name || actual} does not fit here. Use ${BY_ID[s.expected].name}.`;
       if (actual === 'rope') message = 'RoPE rotates Q/K inside attention. This slot needs position vectors added to token embeddings.';
-      if (actual === 'batchnorm') message = 'BatchNorm uses batch statistics. This slot needs per-token feature normalization: LayerNorm.';
+      if (actual === 'batchnorm') message = `BatchNorm uses batch statistics. This slot needs per-token feature normalization: ${BY_ID[s.expected].name}.`;
       record(s.id, s.label, ok, message);
-      if (normAlt) notes.push('RMSNorm is allowed in Experiment mode. The original architecture uses LayerNorm.');
+      if (normAlt) notes.push(`${BY_ID[actual].name} is allowed in Experiment mode. The original architecture uses ${BY_ID[s.expected].name}.`);
     }
     for (const lane of lanes(game)) for (const meta of modulesFor(game, lane)) {
       const m = ensureModule(game, meta.id);
-      if (meta.kind === 'attention') {
-        for (const step of ATTENTION_STEPS) {
-          const expected = step.key === 'mask' ? meta.mask : step.expected;
+      if (meta.kind !== 'ffn' || m.gated) {
+        for (const step of moduleSteps(game, meta)) {
+          const expected = step.expected;
           const actual = m.slots[step.key];
           let message = !actual ? `Add an operation to ${step.label.toLowerCase()}.` : `For "${step.label}", use ${BY_ID[expected].name}.`;
           if (step.key === 'mask' && actual !== expected) message = meta.mask === 'causal' ? 'Decoder self-attention must not see future tokens. Apply a causal mask before softmax.' : meta.id.endsWith('.cross') ? 'Cross-attention can see the full encoder input. Decoder self-attention masks future output tokens.' : 'The encoder needs context on both sides. A causal mask would make it autoregressive.';
           record(meta.id + '.' + step.key, step.label, actual === expected, message, meta.id);
         }
-        for (const role of ['q', 'k', 'v']) {
+        if (meta.kind === 'attention') for (const role of ['q', 'k', 'v']) {
           const expectedSource = meta.id.endsWith('.cross') && role !== 'q' ? 'encoder' : 'hidden';
           record(meta.id + '.source.' + role, `${role.toUpperCase()} source`, m.sources[role] === expectedSource, expectedSource === 'encoder' ? `${role.toUpperCase()} must come from the encoder output. Only Q comes from the decoder.` : `${role.toUpperCase()} must come from the current ${lane} hidden states.`, meta.id);
+        }
+        if (m.gated) {
+          for (const key of ['gateProj', 'upProj', 'downProj']) {
+            const expectedWidth = key === 'downProj' ? game.d : game.hidden;
+            record(meta.id + '.width.' + key, 'SwiGLU branch width', m.widths[key] === expectedWidth, `${key} must output ${expectedWidth} features so the gated branches and residual match.`, meta.id);
+          }
         }
       } else {
         const layers = m.layers;
@@ -225,7 +279,8 @@
     for (const s of topology(game)) if (game.slots[s.id]) filled++;
     for (const lane of lanes(game)) for (const meta of modulesFor(game, lane)) {
       const m = ensureModule(game, meta.id);
-      if (meta.kind === 'attention') { total += ATTENTION_STEPS.length; filled += ATTENTION_STEPS.filter(s => m.slots[s.key]).length; }
+      const steps = moduleSteps(game, meta);
+      if (steps) { total += steps.length; filled += steps.filter(s => m.slots[s.key]).length; }
       else { total += m.layers.length; filled += m.layers.filter(l => l.type).length; }
     }
     return { filled, total, percent: total ? Math.round(filled / total * 100) : 0 };
@@ -236,9 +291,11 @@
     for (const s of topology(game)) game.slots[s.id] = s.expected;
     for (const lane of lanes(game)) for (const meta of modulesFor(game, lane)) {
       const m = ensureModule(game, meta.id);
-      if (meta.kind === 'attention') {
-        for (const s of ATTENTION_STEPS) m.slots[s.key] = s.key === 'mask' ? meta.mask : s.expected;
-        for (const role of ['q', 'k', 'v']) m.sources[role] = meta.id.endsWith('.cross') && role !== 'q' ? 'encoder' : 'hidden';
+      const steps = moduleSteps(game, meta);
+      if (steps) {
+        for (const s of steps) m.slots[s.key] = s.expected;
+        if (m.gated) m.widths = { gateProj: game.hidden, upProj: game.hidden, downProj: game.d };
+        if (meta.kind === 'attention') for (const role of ['q', 'k', 'v']) m.sources[role] = meta.id.endsWith('.cross') && role !== 'q' ? 'encoder' : 'hidden';
       } else m.layers = [{ type: 'linear', width: game.hidden }, { type: PROFILES[game.level].activation, width: game.hidden }, { type: 'linear', width: game.d }];
     }
     return game;
@@ -251,15 +308,15 @@
       for (const meta of modulesFor(game, lane)) {
         const shape = `[batch, T_${lane}, ${game.d}]`;
         if (game.norm === 'pre') steps.push({ id: meta.id + '.norm', lane, label: 'Normalize before ' + meta.name, desc: `Normalize the sublayer input. The residual keeps the original x. ${shape}` });
-        steps.push({ id: meta.id, lane, label: meta.name, desc: meta.id.endsWith('.cross') ? `Q ← decoder, K/V ← encoder. Scores: [batch, ${game.heads}, T_decoder, T_encoder].` : meta.kind === 'ffn' ? `Apply the same FFN separately to every token. Output: ${shape}.` : `${game.heads} heads × ${game.d / game.heads} features. ${meta.mask === 'causal' ? 'Future tokens are masked.' : 'All non-padding context is available.'}` });
+        steps.push({ id: meta.id, lane, label: meta.name, desc: meta.id.endsWith('.cross') ? `Q ← decoder, K/V ← encoder. Scores: [batch, ${game.heads}, T_decoder, T_encoder].` : meta.kind === 'delta' ? '16 Q/K heads and 48 V heads, each 128 wide. Causal width-4 convolution → delta memory → gated RMSNorm → 6144 to model width.' : game.level === 'qwen' && meta.kind === 'attention' ? `${game.heads} Q heads and 4 K/V heads, each 256 wide. Q/K RMSNorm → partial RoPE (64 features) → causal attention → SiLU output gate → ${game.heads * 256} to model width.` : meta.kind === 'ffn' ? `Apply the same FFN separately to every token. Output: ${shape}.` : `${game.heads} query heads × ${headDim(game)} features. ${meta.mask === 'causal' ? 'Future tokens are masked.' : 'All non-padding context is available.'}` });
         steps.push({ id: meta.id + '.add', lane, label: 'Residual Add', desc: `Add x and the sublayer output with matching shape ${shape}.` });
-        if (game.norm === 'post') steps.push({ id: meta.id + '.norm', lane, label: 'Normalize after the residual', desc: `LayerNorm(x + F(x)), shape ${shape}.` });
+        if (game.norm === 'post') steps.push({ id: meta.id + '.norm', lane, label: 'Normalize after the residual', desc: `${BY_ID[PROFILES[game.level].normType || 'layernorm'].name}(x + F(x)), shape ${shape}.` });
       }
       for (const s of t.filter(s => s.scope === 'output')) steps.push({ id: s.id, lane, label: BY_ID[game.slots[s.id]]?.name || s.label, desc: s.id.endsWith('.probs') ? 'Softmax over the vocabulary gives next-token probabilities. This is separate from attention softmax.' : s.id.endsWith('.head') ? 'Linear: d_model → vocabulary_size.' : `Final normalization of the Pre-LN stack output: [batch, T_${lane}, ${game.d}].` });
     }
     return steps;
   }
-  const api = { BLOCKS, BY_ID, COARSE_BLOCKS, COARSE_BY_ID, PROFILES, ATTENTION_STEPS, createGame, lanes, modulesFor, coarseTopology, ensureStructure, checkStructure, coarseProgress, topology, ensureModule, check, progress, fillReference, trace, clone };
+  const api = { moduleSteps, headDim, DELTA_STEPS, SWIGLU_STEPS, BLOCKS, BY_ID, COARSE_BLOCKS, COARSE_BY_ID, PROFILES, ATTENTION_STEPS, createGame, lanes, modulesFor, coarseTopology, ensureStructure, checkStructure, coarseProgress, topology, ensureModule, check, progress, fillReference, trace, clone };
   root.TransformerEngine = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

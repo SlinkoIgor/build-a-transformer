@@ -62,5 +62,19 @@
     "label": "Figure 2",
     "pdf_sha256": "d9d852e2894556e73f53cb22b7c605a9643d6f0b19bf604b429ed6192fa24f4e",
     "image_sha256": "e996e3619ecc7a7c4460d84b32daf4d05bf16a582dbf06edfd50f6b806486d7f"
+  },
+  {
+    "file": "qwen3.8-27b-config.json",
+    "source": "https://huggingface.co/Qwen/Qwen3.8-27B/blob/1d4bf0f2ff6012fd82039f2fa52739d0dd7c60c0/config.json",
+    "revision": "1d4bf0f2ff6012fd82039f2fa52739d0dd7c60c0",
+    "retrieved": "2026-10-04",
+    "sha256": "191e0af232104ed8b65258cf3fb2b842e288008baca7633c11b82a1ac7203aab"
+  },
+  {
+    "file": "qwen3.8-27b-model-card.md",
+    "source": "https://huggingface.co/Qwen/Qwen3.8-27B/blob/1d4bf0f2ff6012fd82039f2fa52739d0dd7c60c0/README.md",
+    "revision": "1d4bf0f2ff6012fd82039f2fa52739d0dd7c60c0",
+    "retrieved": "2026-10-04",
+    "sha256": "0306d294d31c315388b1ecf5b5bf1c20f15673820e31a799dd6a3e460c7d6576"
   }
 ]

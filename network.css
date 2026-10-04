@@ -138,3 +138,22 @@ body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
   .palette-panel { order:2; }
   .palette-content { max-height:17rem; }
 }
+
+.hybrid-group { border:1.5px dashed #648b78; padding:.55rem; border-radius:.8rem; background:#edf5f0a6; }
+.hybrid-group>header { display:flex; justify-content:space-between; align-items:center; gap:.5rem; padding:0 .2rem .45rem; }
+.hybrid-group>header h2 { font-size:.85rem; font-weight:600; }
+.hybrid-group .network-stack { padding-inline:.45rem; }
+.qwen-lane .network-sublayer { padding-inline:1rem; }
+.gate-branches { display:grid; grid-template-columns:1fr 1fr; gap:1rem; align-items:start; }
+.branch-card { min-width:0; background:#f4f8f5; border:1px solid var(--line); padding:.8rem; border-radius:.65rem; }
+.branch-card h3,.branch-card h4 { margin:0 0 .75rem; font-size:.95rem; }
+.branch-merge { text-align:center; font-size:1.6rem; line-height:1.4; color:var(--accent); margin:.3rem; }
+.branch-width { display:flex; align-items:center; justify-content:space-between; gap:.5rem; margin-top:.4rem; font-size:.85rem; }
+.branch-width input { width:6.5rem; border:1px solid var(--line); padding:.4rem; border-radius:.35rem; background:white; }
+.operations-grid.two { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.delta-preparation { max-width:32rem; margin:auto; }
+.delta-equation { background:#eef3f0; color:var(--ink); padding:.8rem; border-radius:.4rem; overflow-x:auto; font-size:1rem; }
+.paper-documents { padding:.8rem 0; display:flex; flex-wrap:wrap; gap:.8rem; }
+.paper-documents h3 { width:100%; }
+@media (max-width:760px) { .gate-branches,.operations-grid.two { grid-template-columns:1fr; } }
+.ffn-info code { display:block; margin:.6rem 0; overflow-wrap:anywhere; }
