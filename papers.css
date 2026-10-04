@@ -1,0 +1,50 @@
+.paper-dialog { width:min(100%,75rem); height:calc(100dvh - 2rem); }
+.paper-tabs { display:flex; gap:.4rem; padding:.6rem 1rem; background:#eef3f7; border-bottom:1px solid var(--line); flex-shrink:0; }
+.paper-tabs button { flex:1; border:1px solid #a6bdcd; border-radius:.35rem; padding:.45rem .6rem; background:#fff; font-weight:700; }
+.paper-tabs button.active { background:var(--accent); color:white; border-color:var(--accent); }
+.paper-tabs span { display:block; font-size:.85rem; font-weight:400; margin-top:.2rem; }
+.paper-tabs .model-year { display:inline; font-size:.8rem; margin:0; }
+.paper-tabs button.active .model-year { color:inherit; }
+.paper-content { padding:1rem 1.2rem; overflow:auto; min-height:0; }
+.paper-overview { display:flex; justify-content:space-between; gap:1rem; align-items:flex-start; }
+.paper-overview p { color:var(--muted); font-size:.9rem; margin-bottom:.35rem; }
+.paper-overview h3 { font-size:1.3rem; max-width:48rem; }
+.paper-links { display:flex; gap:.8rem; flex-wrap:wrap; margin:.65rem 0; }
+.paper-norm-badge { border:1px solid #8d78ae; border-radius:.4rem; background:var(--norm-bg); color:#4a3674; font-weight:700; padding:.55rem .7rem; max-width:14rem; flex-shrink:0; }
+.paper-architecture { display:grid; grid-template-columns:1fr 1fr; gap:1.2rem; margin:1rem 0; }
+.paper-architecture ul { padding-left:1.1rem; margin:.5rem 0; }
+.paper-architecture li { margin:.3rem 0; }
+.paper-architecture pre { align-self:start; margin:0; padding:.85rem; border:1px solid #b7c9d6; border-radius:.4rem; background:#f0f5f9; font-size:.9rem; line-height:1.6; white-space:pre-wrap; overflow-wrap:anywhere; }
+.paper-evidence { padding:.8rem 1rem; border-left:4px solid #4c6f93; background:#ebf2f8; border-radius:0 .4rem .4rem 0; }
+.paper-evidence p { margin-top:.4rem; }
+.paper-evidence blockquote { margin:.6rem 0 0; padding-left:.8rem; border-left:2px solid #99b4c9; font-style:italic; }
+.paper-note { padding:.7rem 0; color:var(--muted); }
+.paper-figures { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1rem; margin-top:1rem; }
+.paper-figure { border:1px solid #b5c9d8; border-radius:.5rem; overflow:hidden; background:#fff; }
+.figure-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:.5rem; padding:.7rem .8rem; background:#eef3f7; }
+.figure-heading h4 { font-size:1rem; }
+.figure-heading>a { flex-shrink:0; font-size:.9rem; }
+.figure-image-button { position:relative; display:block; width:100%; background:#fff; border:0; padding:.65rem; }
+.figure-image-button img { width:100%; height:17rem; object-fit:contain; display:block; }
+.figure-zoom { display:block; text-align:right; font-size:.9rem; color:#21588e; margin-top:.3rem; }
+.paper-figure figcaption { padding:.7rem .8rem; border-top:1px solid var(--line); font-size:.9rem; color:var(--muted); }
+.paper-figure figcaption>a { display:block; margin-top:.5rem; }
+.paper-offline-note { margin-top:1rem; font-size:.9rem; color:var(--muted); }
+.figure-dialog { width:min(100%,80rem); height:calc(100dvh - 2rem); }
+.figure-preview { overflow:auto; min-height:0; flex:1; padding:.8rem 1rem; background:#edf2f6; display:flex; flex-direction:column; align-items:center; }
+.figure-preview img { max-width:100%; min-height:0; width:auto; object-fit:contain; flex:1; }
+.figure-preview p { width:100%; font-size:.9rem; padding:.5rem .6rem; margin-top:.6rem; background:#fff; border:1px solid var(--line); border-radius:.3rem; flex-shrink:0; }
+.figure-load-error { padding:1rem; color:#9e352a; }
+@media(max-width:1100px) { .paper-architecture { grid-template-columns:1fr; } .paper-overview { flex-wrap:wrap; } }
+@media(max-width:720px) {
+  .paper-dialog,.figure-dialog { height:calc(100dvh - .6rem); }
+  .paper-tabs { padding:.4rem; gap:.2rem; }
+  .paper-tabs button { font-size:.85rem; padding:.35rem; }
+  .paper-tabs span { font-size:.75rem; }
+  .paper-content { padding:.7rem; }
+  .paper-overview h3 { font-size:1.15rem; overflow-wrap:anywhere; }
+  .paper-norm-badge { font-size:.9rem; }
+  .paper-figures { grid-template-columns:1fr; }
+  .figure-heading { flex-wrap:wrap; }
+  .figure-preview { padding:.5rem; }
+}

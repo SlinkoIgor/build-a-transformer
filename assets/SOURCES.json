@@ -1,0 +1,66 @@
+[
+  {
+    "image": "transformer-figure-1.png",
+    "source": "https://arxiv.org/pdf/1706.03762",
+    "pdf_page": 3,
+    "label": "Figure 1",
+    "pdf_sha256": "bdfaa68d8984f0dc02beaca527b76f207d99b666d31d1da728ee0728182df697",
+    "image_sha256": "76ad283cefdd994126e853377aeaaa4f50fe10a89b85abbfeb4013fbab44c42f"
+  },
+  {
+    "image": "transformer-figure-2.png",
+    "source": "https://arxiv.org/pdf/1706.03762",
+    "pdf_page": 4,
+    "label": "Figure 2",
+    "pdf_sha256": "bdfaa68d8984f0dc02beaca527b76f207d99b666d31d1da728ee0728182df697",
+    "image_sha256": "40a13f69dd99aa338e1802ac48fe8d20398ddc818156d32876f16ba7ad3f3fc9"
+  },
+  {
+    "image": "bert-figure-1.png",
+    "source": "https://arxiv.org/pdf/1810.04805",
+    "pdf_page": 3,
+    "label": "Figure 1",
+    "pdf_sha256": "5692a5514787a8c6727b4ff3b726a3385798bc68e12138d1d4af83947e2acf6e",
+    "image_sha256": "cb52bba707cae681962bd237f5789a2ce9f3d91ee21b3f7a4723f73b2ed46341"
+  },
+  {
+    "image": "bert-figure-2.png",
+    "source": "https://arxiv.org/pdf/1810.04805",
+    "pdf_page": 5,
+    "label": "Figure 2",
+    "pdf_sha256": "5692a5514787a8c6727b4ff3b726a3385798bc68e12138d1d4af83947e2acf6e",
+    "image_sha256": "c1e5a18ed97df0ec5518b916d7e3be0d82cbb5aad0670c98e473793d80b5ecc2"
+  },
+  {
+    "image": "bert-figure-3.png",
+    "source": "https://arxiv.org/pdf/1810.04805",
+    "pdf_page": 13,
+    "label": "Figure 3",
+    "pdf_sha256": "5692a5514787a8c6727b4ff3b726a3385798bc68e12138d1d4af83947e2acf6e",
+    "image_sha256": "d68092839ff8d18313980669a6a64c1694a4144ebdc295286968a47e2d4cd054"
+  },
+  {
+    "image": "gpt2-table-2.png",
+    "source": "https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf",
+    "pdf_page": 4,
+    "label": "Table 2",
+    "pdf_sha256": "d9d852e2894556e73f53cb22b7c605a9643d6f0b19bf604b429ed6192fa24f4e",
+    "image_sha256": "789827e27830304add7663a6431090cfdedc50fcb0bc79285d3a3cf81efe3224"
+  },
+  {
+    "image": "gpt2-pre-ln-excerpt.png",
+    "source": "https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf",
+    "pdf_page": 4,
+    "label": "Section 2.3, cropped excerpt",
+    "pdf_sha256": "d9d852e2894556e73f53cb22b7c605a9643d6f0b19bf604b429ed6192fa24f4e",
+    "image_sha256": "9b76d86d2a77e713f90d5baa091174f8f41bf58a2acec205dcf07d1dcc6945e7"
+  },
+  {
+    "image": "gpt2-figure-2.png",
+    "source": "https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf",
+    "pdf_page": 5,
+    "label": "Figure 2",
+    "pdf_sha256": "d9d852e2894556e73f53cb22b7c605a9643d6f0b19bf604b429ed6192fa24f4e",
+    "image_sha256": "e996e3619ecc7a7c4460d84b32daf4d05bf16a582dbf06edfd50f6b806486d7f"
+  }
+]
