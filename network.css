@@ -143,7 +143,7 @@ body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
 .hybrid-group>header { display:flex; justify-content:space-between; align-items:center; gap:.5rem; padding:0 .2rem .45rem; }
 .hybrid-group>header h2 { font-size:.85rem; font-weight:600; }
 .hybrid-group .network-stack { padding-inline:.45rem; }
-.qwen-lane .network-sublayer { padding-inline:1rem; }
+.hybrid-lane .network-sublayer { padding-inline:1rem; }
 .gate-branches { display:grid; grid-template-columns:1fr 1fr; gap:1rem; align-items:start; }
 .branch-card { min-width:0; background:#f4f8f5; border:1px solid var(--line); padding:.8rem; border-radius:.65rem; }
 .branch-card h3,.branch-card h4 { margin:0 0 .75rem; font-size:.95rem; }
@@ -157,3 +157,7 @@ body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
 .paper-documents h3 { width:100%; }
 @media (max-width:760px) { .gate-branches,.operations-grid.two { grid-template-columns:1fr; } }
 .ffn-info code { display:block; margin:.6rem 0; overflow-wrap:anywhere; }
+
+.footer-actions { flex-wrap:wrap; justify-content:flex-end; }
+.level-tabs { overflow-x:auto; scrollbar-width:thin; }
+.branch-width select { min-width:5rem; border:1px solid var(--line); padding:.4rem; border-radius:.35rem; background:#fff; }

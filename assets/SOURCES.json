@@ -76,5 +76,19 @@
     "revision": "1d4bf0f2ff6012fd82039f2fa52739d0dd7c60c0",
     "retrieved": "2026-10-04",
     "sha256": "0306d294d31c315388b1ecf5b5bf1c20f15673820e31a799dd6a3e460c7d6576"
+  },
+  {
+    "file": "mellum2-config.json",
+    "source": "https://huggingface.co/JetBrains/Mellum2-12B-A2.5B-Instruct/blob/273d9c1c6882ac8e1562e5b7e043857d35a787b6/config.json",
+    "revision": "273d9c1c6882ac8e1562e5b7e043857d35a787b6",
+    "retrieved": "2026-10-06",
+    "sha256": "f43d018246094dee6dca455b3072766b6acbefd1ac8e7fe664df34710606a541"
+  },
+  {
+    "file": "mellum2-model-card.md",
+    "source": "https://huggingface.co/JetBrains/Mellum2-12B-A2.5B-Instruct/blob/273d9c1c6882ac8e1562e5b7e043857d35a787b6/README.md",
+    "revision": "273d9c1c6882ac8e1562e5b7e043857d35a787b6",
+    "retrieved": "2026-10-06",
+    "sha256": "e60baaa8c002de7d595aa725a41216c629e9734b289dcfbe115ad8d7fd406309"
   }
 ]
